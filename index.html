@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>من سيربح المليون – أساليب تصنيع المقومات</title>
+<style>
+:root{color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#0a1233;--card:#14246b;--gold:#e8c46a;--ok:#1f9d55;--bad:#c0392b;--tx:#f4f1e6}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% 0,#1c2f8f,var(--bg) 70%);color:var(--tx);font-family:Tahoma,"Segoe UI",Arial,sans-serif;display:flex;justify-content:center}
+.wrap{width:100%;max-width:820px;padding:18px}
+h1{text-align:center;color:var(--gold);margin:8px 0 4px;font-size:1.7rem}
+.sub{text-align:center;opacity:.8;margin-bottom:22px}
+.menu{display:grid;gap:14px;margin-top:26px}
+button{font-family:inherit;cursor:pointer}
+.big{background:linear-gradient(#1c3aa8,#102069);border:2px solid var(--gold);color:var(--tx);border-radius:40px;padding:18px;font-size:1.25rem}
+.big:hover{background:var(--gold);color:#111}
+.hidden{display:none!important}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.ll button{background:var(--card);border:2px solid var(--gold);color:var(--gold);border-radius:30px;padding:8px 14px;margin-inline-end:6px;font-size:.95rem}
+.ll button:disabled{opacity:.35;text-decoration:line-through;cursor:default}
+.prize{color:var(--gold);font-weight:bold}
+.ladder{display:flex;gap:6px;justify-content:center;margin:6px 0 16px;flex-wrap:wrap}
+.ladder span{padding:4px 10px;border-radius:14px;background:#0d1a55;font-size:.85rem;border:1px solid #2b3f9c}
+.ladder .cur{background:var(--gold);color:#111;font-weight:bold}
+.ladder .done{background:var(--ok);border-color:var(--ok)}
+.q{background:linear-gradient(#1c3aa8,#102069);border:2px solid var(--gold);border-radius:18px;padding:22px 18px;font-size:1.25rem;line-height:1.7;text-align:center;min-height:110px;display:flex;align-items:center;justify-content:center}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+@media(max-width:560px){.opts{grid-template-columns:1fr}}
+.opt{background:var(--card);border:2px solid #4a5fc9;color:var(--tx);border-radius:30px;padding:14px 16px;font-size:1.05rem;text-align:start;position:relative;overflow:hidden}
+.opt b{color:var(--gold);margin-inline-end:8px}
+.opt:hover:not(:disabled){border-color:var(--gold);background:#1d33a0}
+.opt.sel{background:var(--gold);color:#111}
+.opt.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.opt.bad{background:var(--bad);border-color:var(--bad);color:#fff}
+.opt.gone{visibility:hidden}
+.opt .bar{position:absolute;inset-block:0;inset-inline-start:0;background:rgba(232,196,106,.35);z-index:0}
+.opt span{position:relative;z-index:1}
+.msg{text-align:center;margin-top:14px;min-height:28px;color:var(--gold)}
+.end{text-align:center;padding:30px 10px}
+.end .score{font-size:2.2rem;color:var(--gold);margin:10px 0}
+.small{background:transparent;border:1px solid var(--gold);color:var(--gold);border-radius:20px;padding:6px 14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>من سيربح المليون؟</h1>
+  <div class="sub">المحاضرة الرابعة – أساليب تصنيع المقومات</div>
+
+  <div id="menu" class="menu">
+    <div class="sub" style="margin:0">اختر قسم المسابقة (5 أسئلة عشوائية في كل مرة)</div>
+    <button class="big" onclick="start('trad')">🛠️ التصنيع التقليدي</button>
+    <button class="big" onclick="start('cad')">💻 التصنيع المحوسب</button>
+  </div>
+
+  <div id="game" class="hidden">
+    <div class="top">
+      <div class="ll">
+        <button id="l5050" onclick="fifty()">50:50</button>
+        <button id="laud" onclick="audience()">📊 الجمهور</button>
+        <button id="lphone" onclick="phone()">📞 صديق</button>
+      </div>
+      <div><span id="secname"></span> · <span class="prize" id="curprize"></span></div>
+    </div>
+    <div class="ladder" id="ladder"></div>
+    <div class="q" id="qtext"></div>
+    <div class="opts" id="opts"></div>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <div id="end" class="end hidden">
+    <h2 id="endtitle"></h2>
+    <div class="score" id="endscore"></div>
+    <p id="endnote"></p>
+    <button class="big" onclick="start(sec)">🔁 العب مجدداً (أسئلة جديدة)</button>
+    <br><br>
+    <button class="small" onclick="home()">العودة لاختيار القسم</button>
+  </div>
+</div>
+
+<script>
+// الإجابة الصحيحة دائماً أول خيار في المصفوفة، ويتم خلط الخيارات عند العرض
+const BANK={
+trad:[
+{q:"ما المرحلة التي تلي عمل الطبعة السلبية (القالب) في التصنيع التقليدي؟",a:["إنشاء نموذج موجب ثلاثي الأبعاد","تركيب الجهاز على المريض","تعديل المحيط المتتالي","تشكيل الجهاز بالتفريغ"]},
+{q:"تؤخذ القياسات في التصنيع التقليدي بالنسبة إلى:",a:["المعالم العظمية المحسوسة بسهولة","الأوتار العضلية العميقة","حدود الجلد الخارجية فقط","أوزان المريض"]},
+{q:"أي مما يلي لا يُعد من القياسات الأنثروبومترية المهمة لجزء الجسم المراد تقويمه؟",a:["درجة حرارة الجلد","طول الطرف المتبقي","المحيط المتتالي","الأبعاد الأنسي الوحشي والأمامي الخلفي"]},
+{q:"الطبعة السلبية (Negative Mold) هي قالب يُستخدم من أجل:",a:["إنشاء نموذج إيجابي ثلاثي الأبعاد","قياس وزن المريض","تعقيم الجهاز التقويمي","تسجيل البيانات رقمياً"]},
+{q:"ما المادة الأكثر استخداماً في أخذ الطبعة السلبية؟",a:["ضمادة (رولات) جص باريس","الأكريليك المسخّن","رغوة البولي يوريثان المحفورة","الألياف الزجاجية المصبوبة"]},
+{q:"ما الغرض من وضع طبقة الجوارب الأنبوبية (Tubular Stockinette) قبل أخذ الطبعة؟",a:["خلق واجهة واقية والتحكم في موضع هياكل الأنسجة الرخوة","زيادة سماكة النموذج الموجب","تسريع تصلب الجص","تحديد خطوط القص"]},
+{q:"لماذا يمكن استخدام فاصل موضعي كالفازلين في الطبعة المباشرة؟",a:["لتقليل خطر التقاط الشعر الجلدي","لتسريع جفاف الجص","لتقوية القالب","لتلوين النموذج"]},
+{q:"بماذا توضع العلامات على النتوءات العظمية قبل أخذ الطبعة السلبية؟",a:["بحبر لا يُمحى","بقلم رصاص عادي","بشريط لاصق ملوّن فقط","بالفازلين"]},
+{q:"كم عدد طبقات جص باريس المُوصى به عند لف الطبعة السلبية محيطياً؟",a:["لا يزيد عن طبقتين أو ثلاث طبقات","من عشر إلى اثنتي عشرة طبقة","طبقة واحدة فقط دائماً","لا يوجد حد محدد"]},
+{q:"أي مادة تُستخدم للحصول على طبعة للسطح الأخمصي للقدم؟",a:["رغوة البوليسترين (Polystyrene foam)","الألجينات","شريط الراتنج الليفي","السيليكون السائل"]},
+{q:"تُستخدم طبعة الألجينات (Alginate) لدى المرضى المتعافين من:",a:["حروق الوجه","كسور الحوض","بتر الطرف السفلي","تشوهات العمود الفقري"]},
+{q:"ما الغرض من إضافة مادة فاصلة (كالسيليكون والصابون) إلى جدران القالب قبل صب الجص؟",a:["لتسهيل إزالة القالب بعد تماسك النموذج الموجب","لتلوين النموذج","لزيادة وزن النموذج","لمنع تسرب الماء من الخارج"]},
+{q:"لماذا يُوضع عمود معدني في صبة الجص؟",a:["لتثبيت النموذج من أجل تصحيحه وبقية عمليات الإنتاج","لزيادة مرونة الجهاز","لقياس المحيط","لتبريد الجص"]},
+{q:"أين تتم إضافة جص إضافي على النموذج الموجب؟",a:["حيثما يكون تخفيف الضغط مطلوباً كفوق البروزات العظمية","حيثما تُطبق قوى إضافية","في الأماكن الملساء فقط","لا تتم الإضافة أبداً"]},
+{q:"في طريقة التشكيل بالتفريغ (Vacuum Forming)، تُشكَّل الصفيحة البلاستيكية على النموذج الموجب عن طريق:",a:["تسخينها حتى حالتها اللدنة ثم تغيير فرق ضغط الهواء عبر سطحها","تبريدها بالماء المثلج أولاً","حفرها بآلة طحن","طباعتها طبقة فوق طبقة"]}
+],
+cad:[
+{q:"ماذا يعني الاختصار CAD/CAM؟",a:["التصميم بمساعدة الحاسوب / التصنيع بمساعدة الحاسوب","التحليل الآلي للمعطيات / القياس الآلي","التصنيع الدقيق للمعادن / التشغيل الآلي","التصميم الصناعي المعدّل / التصنيع المتقدم"]},
+{q:"ما مراحل التصنيع المحوسب حسب المحاضرة؟",a:["الحصول على البيانات، برنامج معالجة الشكل، الحفر والإنتاج","أخذ القياسات، الطبعة السلبية، التركيب","المسح، الصب، التشكيل الحراري","الرقمنة، الطباعة، التعقيم"]},
+{q:"كم عدد التجهيزات الرئيسية للتصنيع المحوسب المذكورة في المحاضرة؟",a:["أربعة","اثنان","ثلاثة","ستة"]},
+{q:"أي مما يلي من المكونات الأساسية لنظام CAD/CAM؟",a:["جهاز رقمنة، حاسب للتصميم، آلة طحن (حفر)","فرن تسخين، مضخة تفريغ، ميزان","جص باريس، سيليكون، ألجينات","حاقن راتنج، قالب جاهز، مقص"]},
+{q:"أي مما يلي يُستخدم لتسجيل المعالم السطحية للقطعة التشريحية؟",a:["ماسحات ضوئية ليزرية، قلم ملامس للسطح، أعمدة ميكانيكية بالهواء المضغوط","الأشعة السينية فقط","جهاز تخطيط القلب","رولات الجص"]},
+{q:"لماذا تُعد أجهزة التحويل الرقمي بالليزر غير الملامسة مناسبة لقياس الأشكال الأسطوانية؟",a:["لأنها قادرة على المسح المحيطي، كما في تقويم العمود الفقري","لأنها تعمل بالأمواج الصوتية","لأنها تلامس الجلد مباشرة","لأنها تحتاج قالباً سلبياً دائماً"]},
+{q:"ماذا تفعل الكاميرا الضوئية الليزرية؟",a:["تصوّر تضاريس سطح الجسم وتسجّل البيانات في الحاسوب","تحفر النموذج الموجب","تصنع الطبعة السلبية","تُسخّن الصفيحة البلاستيكية"]},
+{q:"ما التقنية المستخدمة لرقمنة السطح الأخمصي في حالة التحميل الكامل أو الجزئي للوزن؟",a:["أعمدة ميكانيكية تعمل بالهواء المضغوط","طبعة ألجينات","قلب الجص","التشكيل بالتفريغ"]},
+{q:"ما المقصود بخطوط القطع (Trimlines) في برنامج معالجة الشكل؟",a:["خطوط تحدَّد ليتمكن الفنيون من إكمال الجهاز دون مزيد من التعليمات","خطوط لقياس المحيط","علامات على جلد المريض","طبقات من الجص"]},
+{q:"بعد أن يصبح النموذج الرقمي في مكانه، يقوم جهاز الحفر بـ:",a:["إنشاء نموذج موجب للجهاز التقويمي الفعلي","أخذ القياسات من المريض","تصنيع الطبعة السلبية","تركيب الجهاز على المريض"]},
+{q:"لماذا تُصنَّع أجهزة تقويم القدم بواسطة ماكينة حفر طرفي؟",a:["لأن هيكلها الشبيه بالصفائح يخلق احتياجات تشطيب مختلفة","لأنها أثقل الأجهزة","لأنها لا تحتاج برمجيات","لأنها تُصنع من الجص"]},
+{q:"منذ متى أصبح CAD/CAM جزءاً لا يتجزأ من بعض الممارسات السريرية؟",a:["منذ التسعينيات","منذ الخمسينيات","منذ عام 2020","منذ الثمانينيات من القرن التاسع عشر"]},
+{q:"التصنيع بالطباعة ثلاثية الأبعاد هو عملية صنع أجسام صلبة:",a:["بالإضافة (تصنيع تراكمي) عبر رصّ طبقات متتالية","بالحذف (إزالة المادة) فقط","بالصب في قوالب فقط","بالتشكيل الحراري فقط"]},
+{q:"تختلف الطباعة ثلاثية الأبعاد عن نظامي القولبة والنحت اللذين يبددان أكثر من:",a:["90% من المادة المستخدمة","10% من المادة المستخدمة","50% من الوقت","30% من التكلفة"]},
+{q:"كيف تؤثر شبكات الإنتاج الحاسوبية في كثير من الأحيان على التصنيع؟",a:["تقلل وقت التصنيع وأوقات الإنتاج مما يجعلها مجدية اقتصادياً حتى للمرافق الصغيرة","تزيد وقت التصنيع كثيراً","تلغي الحاجة إلى المريض","تجعل الجهاز أغلى دائماً"]}
+]};
+const NAMES={trad:"التصنيع التقليدي",cad:"التصنيع المحوسب"};
+const PRIZES=["1,000","5,000","25,000","100,000","1,000,000"];
+let sec,qs,idx,locked,used;
+const $=id=>document.getElementById(id);
+const L=["أ","ب","ج","د"];
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function home(){$("game").classList.add("hidden");$("end").classList.add("hidden");$("menu").classList.remove("hidden")}
+function start(s){
+  sec=s;
+  qs=shuffle(BANK[s]).slice(0,5).map(o=>{const opts=shuffle(o.a.map((t,i)=>({t,c:i===0})));return{q:o.q,opts}});
+  idx=0;used={};
+  ["l5050","laud","lphone"].forEach(i=>$(i).disabled=false);
+  $("menu").classList.add("hidden");$("end").classList.add("hidden");$("game").classList.remove("hidden");
+  $("secname").textContent=NAMES[s];
+  show();
+}
+function show(){
+  locked=false;$("msg").textContent="";
+  const q=qs[idx];
+  $("curprize").textContent="السؤال "+(idx+1)+" من 5 – "+PRIZES[idx];
+  $("ladder").innerHTML=PRIZES.map((p,i)=>`<span class="${i<idx?"done":i===idx?"cur":""}">${p}</span>`).join("");
+  $("qtext").textContent=q.q;
+  $("opts").innerHTML=q.opts.map((o,i)=>`<button class="opt" id="o${i}" onclick="pick(${i})"><span><b>${L[i]}</b>${o.t}</span></button>`).join("");
+}
+function pick(i){
+  if(locked)return;locked=true;
+  const q=qs[idx];const b=$("o"+i);b.classList.add("sel");
+  $("msg").textContent="هل هذا جوابك النهائي؟ ...";
+  setTimeout(()=>{
+    b.classList.remove("sel");
+    const ci=q.opts.findIndex(o=>o.c);
+    $("o"+ci).classList.add("ok");
+    if(i!==ci)b.classList.add("bad");
+    setTimeout(()=>{
+      if(i!==ci)return finish(false);
+      if(idx===4)return finish(true);
+      idx++;show();
+    },1500);
+  },1100);
+}
+function finish(win){
+  $("game").classList.add("hidden");$("end").classList.remove("hidden");
+  const safe=win?PRIZES[4]:(idx>=1?PRIZES[idx-1]:"0");
+  $("endtitle").textContent=win?"🎉 مبروك! ربحتَ المليون":"إجابة خاطئة 😔";
+  $("endscore").textContent=safe+" ل.س";
+  $("endnote").textContent=win?"أجبت عن الأسئلة الخمسة بشكل صحيح في قسم "+NAMES[sec]:"وصلتَ إلى السؤال "+(idx+1)+" من 5 في قسم "+NAMES[sec];
+}
+function alive(){const q=qs[idx];return q.opts.map((o,i)=>i).filter(i=>!$("o"+i).classList.contains("gone"))}
+function fifty(){
+  if(locked||used.f)return;used.f=1;$("l5050").disabled=true;
+  const q=qs[idx];
+  const wrong=shuffle(q.opts.map((o,i)=>i).filter(i=>!q.opts[i].c)).slice(0,2);
+  wrong.forEach(i=>$("o"+i).classList.add("gone"));
+}
+function audience(){
+  if(locked||used.a)return;used.a=1;$("laud").disabled=true;
+  const q=qs[idx],a=alive();
+  const ci=q.opts.findIndex(o=>o.c);
+  let hi=45+Math.floor(Math.random()*35),rest=100-hi,p={};
+  const others=a.filter(i=>i!==ci);
+  others.forEach((i,k)=>{const v=k===others.length-1?rest:Math.floor(Math.random()*rest);p[i]=v;rest-=v});
+  p[ci]=hi;
+  a.forEach(i=>{const o=$("o"+i);o.insertAdjacentHTML("afterbegin",`<div class="bar" style="width:${p[i]}%"></div>`);o.querySelector("span").insertAdjacentText("beforeend"," ("+p[i]+"%)")});
+}
+function phone(){
+  if(locked||used.p)return;used.p=1;$("lphone").disabled=true;
+  const q=qs[idx],a=alive(),ci=q.opts.findIndex(o=>o.c);
+  const right=Math.random()<0.8;
+  const pickI=right?ci:shuffle(a.filter(i=>i!==ci))[0];
+  const ans=right?"أنا واثق تقريباً أن الجواب هو ":"لست متأكداً، لكن أظن أنه ";
+  $("msg").textContent="📞 صديقك: «"+ans+L[pickI]+"»";
+}
+</script>
+</body>
+</html>
